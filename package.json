@@ -7,7 +7,7 @@
     "tycho-vite": "bin/tycho-vite"
   },
   "scripts": {
-    "start": "tsup --watch",
+    "dev": "tsup --watch",
     "build": "tsup --minify"
   },
   "keywords": [],
