@@ -20,6 +20,7 @@ export async function optimize(root: string) {
   await build({
     entryPoints: [entry],
     write: false,
+    // true: 需要打包第三方依赖; 默认为 false
     bundle: true,
     plugins: [scanPlugin(deps)],
   });

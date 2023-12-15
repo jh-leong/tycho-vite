@@ -5,7 +5,7 @@ export function scanPlugin(deps: Set<string>): Plugin {
   return {
     name: 'esbuild:scan-deps',
     setup(build) {
-      /** 
+      /**
        * 1. 忽略的文件类型, 这些类型的文件不会被记录依赖, 防止 esbuild 报错
        */
       build.onResolve(
@@ -34,6 +34,7 @@ export function scanPlugin(deps: Set<string>): Plugin {
 
           return {
             path: id,
+            // 标记 external, 不对第三方依赖进行递归遍历
             external: true,
           };
         }
