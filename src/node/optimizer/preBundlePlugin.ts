@@ -23,11 +23,11 @@ export function preBundlePlugin(deps: Set<string>): Plugin {
           const { path: id, importer } = resolveInfo;
           const isEntry = !importer;
 
-          console.log(
-            (deps.has(id) ? green : gray)(
-              `🚀\n ~ file: preBundlePlugin.ts:22 ~ onResolve > path: ${id}`
-            )
-          );
+          // console.log(
+          //   (deps.has(id) ? green : gray)(
+          //     `🚀\n ~ file: preBundlePlugin.ts:22 ~ onResolve > path: ${id}`
+          //   )
+          // );
 
           // 命中需要预编译的依赖
           if (deps.has(id)) {
@@ -66,10 +66,10 @@ export function preBundlePlugin(deps: Set<string>): Plugin {
           // 定位到依赖的绝对路径
           const entryPath = normalizePath(resolve.sync(id, { basedir: root }));
 
-          console.log(
-            `🚀\n ~ file: preBundlePlugin.ts:56 ~ onLoad > (${id}) entryPath:`,
-            entryPath
-          );
+          // console.log(
+          //   `🚀\n ~ file: preBundlePlugin.ts:56 ~ onLoad > (${id}) entryPath:`,
+          //   entryPath
+          // );
 
           // 读取依赖的源码
           const code = await fs.readFile(entryPath, 'utf-8');
@@ -106,7 +106,7 @@ export function preBundlePlugin(deps: Set<string>): Plugin {
             proxyModule.push(`export * from "${entryPath}"`);
           }
 
-          debug('代理模块内容: %o', proxyModule.join('\n'));
+          // debug('代理模块内容: %o', proxyModule.join('\n'));
 
           const loader = path.extname(entryPath).slice(1);
 

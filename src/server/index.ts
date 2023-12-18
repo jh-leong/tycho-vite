@@ -8,6 +8,7 @@ import {
   PluginContainer,
 } from '../node/pluginContainer';
 import { Plugin } from '../node/plugin';
+import { indexHtmlMiddleware } from './middlewares/indexHtml';
 
 export interface ServerContext {
   root: string;
@@ -36,6 +37,8 @@ export async function startDevServer() {
       await plugin.configureServer(serverContext);
     }
   }
+
+  app.use(indexHtmlMiddleware(serverContext));
 
   app.listen(3000, async () => {
     await optimize(root);
