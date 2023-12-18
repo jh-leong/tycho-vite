@@ -31,3 +31,9 @@ export const BARE_IMPORT_RE = /^[\w@][^:]/;
  * 约定: 预构建产物路径 `node_modules/.m-vite`
  */
 export const PRE_BUNDLE_DIR = path.join('node_modules', '.m-vite');
+
+export const JS_TYPES_RE = /\.(?:j|t)sx?$|\.mjs$/;
+export const QUERY_RE = /\?.*$/s;
+export const HASH_RE = /#.*$/s;
+
+export const DEFAULT_EXTENSIONS = ['.tsx', '.ts', '.jsx', 'js'];

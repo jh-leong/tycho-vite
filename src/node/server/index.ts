@@ -1,14 +1,12 @@
 import connect from 'connect';
 import { blue, green } from 'picocolors';
-import { optimize } from '../node/optimizer';
+import { optimize } from '../optimizer';
 
-import { resolvePlugins } from '../node/plugins';
-import {
-  createPluginContainer,
-  PluginContainer,
-} from '../node/pluginContainer';
-import { Plugin } from '../node/plugin';
+import { resolvePlugins } from '../plugins';
+import { createPluginContainer, PluginContainer } from '../pluginContainer';
+import { Plugin } from '../plugin';
 import { indexHtmlMiddleware } from './middlewares/indexHtml';
+import { transformMiddleware } from './middlewares/transform';
 
 export interface ServerContext {
   root: string;
@@ -26,7 +24,7 @@ export async function startDevServer() {
   const pluginContainer = createPluginContainer(plugins);
 
   const serverContext: ServerContext = {
-    root: process.cwd(),
+    root,
     app,
     pluginContainer,
     plugins,
@@ -39,6 +37,7 @@ export async function startDevServer() {
   }
 
   app.use(indexHtmlMiddleware(serverContext));
+  app.use(transformMiddleware(serverContext));
 
   app.listen(3000, async () => {
     await optimize(root);
