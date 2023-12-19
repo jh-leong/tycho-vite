@@ -12,6 +12,13 @@ import { ServerContext } from '../server/index';
 import { pathExists } from 'fs-extra';
 import resolve from 'resolve';
 
+/**
+ * Server-only plugin that lexes, resolves, rewrites and analyzes url imports.
+ *
+ * 1. 静态资源, 加上 ?import 后缀
+ * 2. 第三方依赖, 替换路径为预构建资源
+ * 3. 导入其他的源码文件, 替换为导入源码的绝对路径
+ */
 export function importAnalysisPlugin(): Plugin {
   let serverContext: ServerContext;
 
@@ -34,6 +41,13 @@ export function importAnalysisPlugin(): Plugin {
       for (const importInfo of imports) {
         const { s: modStart, e: modEnd, n: modSource } = importInfo;
         if (!modSource) continue;
+
+        // 静态资源, 加上 ?import 后缀
+        if (modSource.endsWith('.svg')) {
+          const resolvedUrl = path.join(path.dirname(id), modSource);
+          ms.overwrite(modStart, modEnd, `${resolvedUrl}?import`);
+          continue;
+        }
 
         // 第三方依赖, 替换路径为预构建资源
         if (BARE_IMPORT_RE.test(modSource)) {

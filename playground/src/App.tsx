@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import React from 'react';
-// import logo from "./logo.svg";
 import './App.css';
 
-const logo = '';
+import logo from './logo.svg';
 
 import { add } from 'lodash-es';
 console.log('add(1, 2)', add(1, 2));
