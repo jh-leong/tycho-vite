@@ -36,6 +36,9 @@ export const isJSRequest = (id: string): boolean => {
   return false;
 };
 
+/**
+ * 去除 url 中的 hash 和 query
+ */
 export const cleanUrl = (url: string): string =>
   url.replace(HASH_RE, '').replace(QUERY_RE, '');
 
@@ -61,7 +64,7 @@ export function isPlainObject(obj: any): boolean {
 }
 
 /**
- * 解析文件相对于 root 的路径
+ * 解析文件相对于 root 的路径, 解析后路径开头没有 '/'
  */
 export function getShortName(file: string, root: string) {
   return file.startsWith(root + '/') ? path.posix.relative(root, file) : file;

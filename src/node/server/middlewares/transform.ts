@@ -19,6 +19,12 @@ export async function transformRequest(
 
   url = cleanUrl(url);
 
+  const { moduleGraph } = serverContext;
+  let mod = await moduleGraph.getModuleByUrl(url);
+
+  // 处理过的模块直接返回缓存
+  if (mod && mod.transformResult) return mod.transformResult;
+
   let transformResult;
 
   // 简单来说，就是依次调用插件容器的 resolveId、load、transform 方法
@@ -31,12 +37,19 @@ export async function transformRequest(
       code = code.code;
     }
 
+    mod = await moduleGraph.ensureEntryFromUrl(url);
+
     if (code) {
       transformResult = await pluginContainer.transform(
         code as string,
         resolvedResult?.id
       );
     }
+  }
+
+  // 缓存模块的处理结果
+  if (mod) {
+    mod.transformResult = transformResult;
   }
 
   return transformResult;

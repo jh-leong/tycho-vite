@@ -15,9 +15,12 @@ import resolve from 'resolve';
 /**
  * Server-only plugin that lexes, resolves, rewrites and analyzes url imports.
  *
- * 1. 静态资源, 加上 ?import 后缀
- * 2. 第三方依赖, 替换路径为预构建资源
- * 3. 导入其他的源码文件, 替换为导入源码的绝对路径
+ * 1. 对于源码中的 import 语句, 分析出导入的模块路径
+ *  - 静态资源, 加上 ?import 后缀
+ *  - 第三方依赖, 替换路径为预构建资源
+ *  - 源码文件, 替换为导入源码的绝对路径
+ *
+ * 2. 对业务源码, 在顶部注入 HMR 相关的工具函数
  */
 export function importAnalysisPlugin(): Plugin {
   let serverContext: ServerContext;
@@ -28,22 +31,46 @@ export function importAnalysisPlugin(): Plugin {
       serverContext = s;
     },
     async transform(code: string, id: string) {
-      if (!isJSRequest(id)) {
+      if (!isJSRequest(id) || isInternalRequest(id)) {
         return null;
       }
 
-      await init;
+      const importedModules = new Set<string>();
 
+      const { moduleGraph } = serverContext;
+      const curMod = moduleGraph.getModuleById(id)!;
+
+      const resolve = async (id: string, importer?: string) => {
+        const resolved = await this.resolve(
+          id,
+          importer ? normalizePath(importer) : importer
+        );
+        if (!resolved) return;
+
+        let resolvedId = `/${getShortName(resolved.id, serverContext.root)}`;
+
+        // 假如模块已经被加载过, 给解析的路径添加时间戳
+        const cleanedId = cleanUrl(resolved.id);
+        const mod = moduleGraph.getModuleById(cleanedId);
+        if (mod && mod.lastHMRTimestamp > 0) {
+          resolvedId += '?t=' + mod.lastHMRTimestamp;
+        }
+
+        return resolvedId;
+      };
+
+      await init;
       const [imports] = parse(code);
       const ms = new MagicString(code);
 
-      // 分析源码中的所有 import 语句
+      // 1. 分析源码中的 import 语句
       for (const importInfo of imports) {
         const { s: modStart, e: modEnd, n: modSource } = importInfo;
         if (!modSource) continue;
 
         // 静态资源, 加上 ?import 后缀
         if (modSource.endsWith('.svg')) {
+          // todo: 假设 svg 文件和源码文件在同一目录下
           const resolvedUrl = path.join(path.dirname(id), modSource);
           ms.overwrite(modStart, modEnd, `${resolvedUrl}?import`);
           continue;
@@ -56,13 +83,16 @@ export function importAnalysisPlugin(): Plugin {
           );
 
           ms.overwrite(modStart, modEnd, bundlePath);
+          importedModules.add(bundlePath);
         }
-        // 导入其他源码文件
+        // 源码文件
         else if (modSource.startsWith('.') || modSource.startsWith('/')) {
-          // 调用插件容器的上下文, 解析路径
-          const resolved = await this.resolve(modSource, id);
+          // 解析为绝对路径
+          const resolved = await resolve(modSource, id);
+
           if (resolved) {
-            ms.overwrite(modStart, modEnd, resolved.id);
+            ms.overwrite(modStart, modEnd, resolved);
+            importedModules.add(resolved);
           }
         }
       }
